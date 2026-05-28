@@ -1,4 +1,10 @@
-import { pipeline } from "@xenova/transformers";
+import { pipeline, env } from "@xenova/transformers";
+
+// Configure WASM backend paths for cross-platform deployment.
+// On Linux serverless (Vercel), native onnxruntime-node is blocked by
+// next.config.ts via Turbopack alias - the library falls back to WASM.
+env.backends.onnx.wasm.wasmPaths =
+  "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/";
 
 let extractor: any = null;
 
@@ -12,11 +18,6 @@ async function getExtractor() {
   return extractor;
 }
 
-/**
- * Generate a 384-dimensional normalized embedding vector for a given text.
- * Uses all-MiniLM-L6-v2 running locally via ONNX — no API keys, no network.
- * First call downloads ~80MB model; subsequent calls use cached model.
- */
 export async function generateEmbedding(text: string): Promise<number[]> {
   const pipe = await getExtractor();
   const result = await pipe(text, { pooling: "mean", normalize: true });
